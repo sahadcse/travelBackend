@@ -11,6 +11,14 @@ const connectDB = require("./src/config/DB");
 dotenv.config();
 const app = express();
 
+// Welcome route
+app.get("/api/v1", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Welcome to Hotel Booking API",
+  });
+});
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,15 +43,21 @@ const getLocalIP = () => {
   return "127.0.0.1";
 };
 
-connectDB()
-  .then(() => {
-    app.listen(port, () => {
-      const localIP = getLocalIP();
-      console.clear();
-      console.log(`Server running on http://${localIP}:${port}`);
+let server; // Declare server variable
+
+if (process.env.NODE_ENV !== "test") {
+  connectDB()
+    .then(() => {
+      server = app.listen(port, () => {
+        const localIP = getLocalIP();
+        console.clear();
+        console.log(`Server running on http://${localIP}:${port}`);
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to connect to MongoDB:", error);
+      process.exit(1);
     });
-  })
-  .catch((error) => {
-    console.error("Failed to connect to MongoDB:", error);
-    process.exit(1);
-  });
+}
+
+module.exports = { app }; // Only export app, let test helper manage server

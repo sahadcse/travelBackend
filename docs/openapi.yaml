@@ -1,0 +1,386 @@
+openapi: 3.0.0
+info:
+  title: Hotel Booking API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    UnauthorizedError:
+      description: Missing or invalid token
+    ForbiddenError:
+      description: Insufficient permissions
+    ValidationError:
+      description: Invalid input data
+    NotFoundError:
+      description: Resource not found
+    DuplicateError:
+      description: Resource already exists
+    ServerError:
+      description: Internal server error
+security:
+  - BearerAuth: []
+paths:
+  /auth/register:
+    post:
+      summary: User registration
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: Successful registration
+  /auth/login:
+    post:
+      summary: User login
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Successful login
+  /auth/logout:
+    post:
+      summary: User logout
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: Successful logout
+  /auth/forgot-password:
+    post:
+      summary: Request password reset
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: Password reset requested
+  /auth/reset-password/{token}:
+    post:
+      summary: Reset password with token
+      tags:
+        - Auth
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Password reset successful
+  /users/all:
+    get:
+      summary: Get all users
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /users/single/{id}:
+    get:
+      summary: Get user by ID
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /users/create:
+    post:
+      summary: Create user
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User created successfully
+  /users/update/{id}:
+    put:
+      summary: Update user
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User updated successfully
+  /users/delete/{id}:
+    delete:
+      summary: Delete user
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User deleted successfully
+  /services/search:
+    get:
+      summary: Search services
+      tags:
+        - Services
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /services/all:
+    get:
+      summary: Get all services
+      tags:
+        - Services
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /services/create:
+    post:
+      summary: Create service
+      tags:
+        - Services
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Service created successfully
+  /services/single/{id}:
+    get:
+      summary: Get service by ID
+      tags:
+        - Services
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /services/update/{id}:
+    patch:
+      summary: Update service
+      tags:
+        - Services
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Service updated successfully
+  /services/delete/{id}:
+    delete:
+      summary: Delete service
+      tags:
+        - Services
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Service deleted successfully
+  /transports/search:
+    get:
+      summary: Search transports
+      tags:
+        - Transports
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /transports/all:
+    get:
+      summary: Get all transports
+      tags:
+        - Transports
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /transports/create:
+    post:
+      summary: Create transport
+      tags:
+        - Transports
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Transport created successfully
+  /transports/single/{id}:
+    get:
+      summary: Get transport by ID
+      tags:
+        - Transports
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /transports/update/{id}:
+    patch:
+      summary: Update transport
+      tags:
+        - Transports
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Transport updated successfully
+  /transports/delete/{id}:
+    delete:
+      summary: Delete transport
+      tags:
+        - Transports
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Transport deleted successfully
+  /bookings/my-bookings:
+    get:
+      summary: Get user's bookings
+      tags:
+        - Bookings
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /bookings/create:
+    post:
+      summary: Create booking
+      tags:
+        - Bookings
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Booking created successfully
+  /bookings/cancel/{id}:
+    patch:
+      summary: Cancel booking
+      tags:
+        - Bookings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Booking cancelled successfully
+  /bookings/all:
+    get:
+      summary: Get all bookings
+      tags:
+        - Bookings
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successful operation
+  /bookings/updateStatus/{id}:
+    patch:
+      summary: Update booking status
+      tags:
+        - Bookings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Booking status updated successfully
+  /bookings/delete/{id}:
+    delete:
+      summary: Delete booking
+      tags:
+        - Bookings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Booking deleted successfully

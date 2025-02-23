@@ -1,4 +1,4 @@
-# Hotel Booking API Documentation
+# API Documentation
 
 ## Base URL
 
@@ -7,6 +7,12 @@
 ```
 
 ## Authentication
+
+All protected routes require a Bearer token in the Authorization header.
+
+```http
+Authorization: Bearer <token>
+```
 
 All routes except `/auth/*` and the root endpoint require authentication via Bearer token.
 
@@ -174,6 +180,42 @@ PATCH /api/v1/users/profile
   }
 }
 ```
+
+## Response Format
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "data": {
+    // Response data
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Error description"
+  }
+}
+```
+
+## Error Codes
+
+| Code             | Description              |
+| ---------------- | ------------------------ |
+| UNAUTHORIZED     | Missing or invalid token |
+| FORBIDDEN        | Insufficient permissions |
+| VALIDATION_ERROR | Invalid input data       |
+| NOT_FOUND        | Resource not found       |
+| DUPLICATE_ERROR  | Resource already exists  |
+| SERVER_ERROR     | Internal server error    |
 
 ## Error Responses
 

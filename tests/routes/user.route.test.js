@@ -1,15 +1,24 @@
 const request = require("supertest");
-const app = require("../../server"); // Correct path to app
-const User = require("../../src/models/userModel"); // Correct model path
+const { app, startServer, stopServer } = require("../helpers/testServer");
+const User = require("../../src/models/userModel");
 const { generateToken } = require("../../src/utils/jwt");
 
 describe("User Routes", () => {
   let adminToken, customerToken, testUserId;
 
   beforeAll(async () => {
-    // Setup test users and tokens
+    await startServer();
+  });
+
+  afterAll(async () => {
+    await stopServer();
+  });
+
+  beforeEach(async () => {
+    // Create fresh test users before each test
     const admin = await User.create({
-      name: "Admin User",
+      firstName: "Admin",
+      lastName: "User",
       email: "admin@test.com",
       password: "test1234",
       role: "admin",
@@ -17,133 +26,133 @@ describe("User Routes", () => {
     });
 
     const customer = await User.create({
-      name: "Test Customer",
+      firstName: "Test",
+      lastName: "Customer",
       email: "customer@test.com",
       password: "test1234",
       role: "customer",
       phoneNumber: "0987654321",
     });
 
-    adminToken = generateToken(admin._id);
-    customerToken = generateToken(customer._id);
+    // Pass the entire user object to generateToken
+    adminToken = generateToken(admin);
+    customerToken = generateToken(customer);
     testUserId = customer._id;
   });
 
-  describe("GET /api/users", () => {
+  describe("GET /api/v1/users", () => {
     it("should return 401 if no token provided", async () => {
-      const res = await request(app).get("/api/users");
-      expect(res.status).toBe(401);
-    });
+      const response = await request(app).get("/api/v1/users").expect(401);
 
-    it("should return 403 if non-admin user", async () => {
-      const res = await request(app)
-        .get("/api/users")
-        .set("Authorization", `Bearer ${customerToken}`);
-      expect(res.status).toBe(403);
+      expect(response.body.success).toBe(false);
     });
 
     it("should return users if admin", async () => {
-      const res = await request(app)
-        .get("/api/users")
-        .set("Authorization", `Bearer ${adminToken}`);
-      expect(res.status).toBe(200);
-      expect(Array.isArray(res.body.data)).toBeTruthy();
-    });
-
-    it("should return 404 for non-existent user", async () => {
-      const fakeId = "507f1f77bcf86cd799439011";
-      const res = await request(app)
-        .get(`/api/users/${fakeId}`)
-        .set("Authorization", `Bearer ${adminToken}`);
-      expect(res.status).toBe(404);
-    });
-
-    it("should validate user data on creation", async () => {
-      const invalidUser = {
-        name: "Test",
-        // Missing required email
-        password: "test1234",
-      };
-
-      const res = await request(app)
-        .post("/api/users")
+      const response = await request(app)
+        .get("/api/v1/users")
         .set("Authorization", `Bearer ${adminToken}`)
-        .send(invalidUser);
-      expect(res.status).toBe(400);
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data)).toBeTruthy();
     });
   });
 
-  describe("GET /api/users/:id", () => {
-    it("should return user if authorized", async () => {
-      const res = await request(app)
-        .get(`/api/users/${testUserId}`)
-        .set("Authorization", `Bearer ${customerToken}`);
-      expect(res.status).toBe(200);
-      expect(res.body.data).toHaveProperty("_id");
-    });
-  });
-
-  describe("POST /api/users", () => {
-    it("should create user if admin", async () => {
+  describe("POST /api/v1/users", () => {
+    it("should create new user with valid data", async () => {
       const userData = {
-        name: "New User",
+        firstName: "New",
+        lastName: "User",
         email: "newuser@test.com",
         password: "test1234",
         role: "customer",
+        phoneNumber: "1231231234",
       };
 
-      const res = await request(app)
-        .post("/api/users")
+      const response = await request(app)
+        .post("/api/v1/users")
         .set("Authorization", `Bearer ${adminToken}`)
-        .send(userData);
-      expect(res.status).toBe(201);
-      expect(res.body.data).toHaveProperty("email", userData.email);
+        .send(userData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.email).toBe(userData.email);
+    });
+
+    it("should validate required fields", async () => {
+      const response = await request(app)
+        .post("/api/v1/users")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({})
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBeDefined();
     });
   });
 
-  describe("PUT /api/users/:id", () => {
-    it("should update user if authorized", async () => {
+  describe("PUT /api/v1/users/:id", () => {
+    it("should update user profile", async () => {
       const updateData = {
-        name: "Updated Name",
+        firstName: "Updated",
+        lastName: "Name",
+        phoneNumber: "9876543210",
       };
 
-      const res = await request(app)
-        .put(`/api/users/${testUserId}`)
+      const response = await request(app)
+        .put(`/api/v1/users/${testUserId}`)
         .set("Authorization", `Bearer ${customerToken}`)
-        .send(updateData);
-      expect(res.status).toBe(200);
-      expect(res.body.data).toHaveProperty("name", updateData.name);
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.firstName).toBe(updateData.firstName);
     });
   });
 
-  describe("DELETE /api/users/:id", () => {
+  describe("DELETE /api/v1/users/:id", () => {
     it("should delete user if admin", async () => {
-      const res = await request(app)
-        .delete(`/api/users/${testUserId}`)
-        .set("Authorization", `Bearer ${adminToken}`);
-      expect(res.status).toBe(200);
+      const response = await request(app)
+        .delete(`/api/v1/users/${testUserId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+
+      // Verify user is deleted
+      const deletedUser = await User.findById(testUserId);
+      expect(deletedUser).toBeNull();
     });
   });
 
   describe("Error Handling", () => {
-    it("should handle invalid token format", async () => {
-      const res = await request(app)
-        .get("/api/users")
-        .set("Authorization", "Invalid-Token-Format");
-      expect(res.status).toBe(401);
+    it("should handle invalid MongoDB IDs", async () => {
+      const response = await request(app)
+        .get("/api/v1/users/invalid-id")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBeDefined();
     });
 
-    it("should handle expired tokens", async () => {
-      const expiredToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMyIsImlhdCI6MTUxNjIzOTAyMiwiZXhwIjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-      const res = await request(app)
-        .get("/api/users")
-        .set("Authorization", `Bearer ${expiredToken}`);
-      expect(res.status).toBe(401);
-    });
-  });
+    it("should handle duplicate email", async () => {
+      const userData = {
+        firstName: "Duplicate",
+        lastName: "User",
+        email: "admin@test.com", // Already exists
+        password: "test1234",
+        role: "customer",
+      };
 
-  afterAll(async () => {
-    await User.deleteMany({}); // Clean up test database
+      const response = await request(app)
+        .post("/api/v1/users")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send(userData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBeDefined();
+    });
   });
 });

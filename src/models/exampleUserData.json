@@ -1,0 +1,111 @@
+[
+  {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "password": "hashedpassword123",
+    "profilePicture": "http://example.com/profile/johndoe.jpg",
+    "phone": "+1234567890",
+    "address": {
+      "street": "123 Main St",
+      "city": "Anytown",
+      "state": "Anystate",
+      "zipCode": "12345",
+      "country": "USA"
+    },
+    "preferences": {
+      "language": "en",
+      "currency": "USD",
+      "notifications": {
+        "email": true,
+        "push": false
+      }
+    },
+    "role": "customer",
+    "security": {
+      "passwordResetToken": "sometoken",
+      "passwordResetExpires": "2023-12-31T23:59:59.999Z"
+    },
+    "active": true,
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2023-01-01T00:00:00.000Z"
+  },
+  {
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "email": "jane.smith@example.com",
+    "password": "hashedpassword456",
+    "profilePicture": "http://example.com/profile/janesmith.jpg",
+    "phone": "+0987654321",
+    "address": {
+      "street": "456 Elm St",
+      "city": "Othertown",
+      "state": "Otherstate",
+      "zipCode": "54321",
+      "country": "Canada"
+    },
+    "preferences": {
+      "language": "fr",
+      "currency": "CAD",
+      "notifications": {
+        "email": true,
+        "push": true
+      }
+    },
+    "role": "provider",
+    "security": {
+      "passwordResetToken": "anothertoken"
+    },
+    "active": true
+  },
+  {
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "email": "alice.johnson@example.com",
+    "password": "hashedpassword789",
+    "profilePicture": "http://example.com/profile/alicejohnson.jpg",
+    "phone": "+1122334455",
+    "address": {
+      "street": "789 Oak St",
+      "city": "Sometown",
+      "state": "Somestate",
+      "zipCode": "67890",
+      "country": "UK"
+    },
+    "preferences": {
+      "language": "en",
+      "currency": "GBP",
+      "notifications": {
+        "email": false,
+        "push": true
+      }
+    },
+    "role": "customer",
+    "active": true
+  },
+  {
+    "firstName": "Bob",
+    "lastName": "Brown",
+    "email": "bob.brown@example.com",
+    "password": "hashedpassword101",
+    "profilePicture": "http://example.com/profile/bobbrown.jpg",
+    "phone": "+2233445566",
+    "address": {
+      "street": "101 Pine St",
+      "city": "Newtown",
+      "state": "Newstate",
+      "zipCode": "98765",
+      "country": "Australia"
+    },
+    "preferences": {
+      "language": "en",
+      "currency": "AUD",
+      "notifications": {
+        "email": true,
+        "push": false
+      }
+    },
+    "role": "provider",
+    "active": true
+  }
+]

@@ -4,17 +4,37 @@ const dotenv = require("dotenv");
 dotenv.config({ path: ".env.test" });
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGODB_TEST_URI);
+  if (mongoose.connection.readyState === 0) {
+    try {
+      await mongoose.connect(process.env.MONGODB_TEST_URI, {
+        // useNewUrlParser: true,
+        // useUnifiedTopology: true,
+      });
+    } catch (error) {
+      console.error("Error connecting to the test database:", error);
+      process.exit(1);
+    }
+  }
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();
+  if (mongoose.connection.readyState !== 0) {
+    try {
+      await mongoose.connection.close();
+    } catch (error) {
+      console.error("Error closing database connection:", error);
+    }
+  }
 });
 
-// Clear all test data after each test
-afterEach(async () => {
+beforeEach(async () => {
+  // Clean collections before each test
   const collections = mongoose.connection.collections;
   for (const key in collections) {
-    await collections[key].deleteMany();
+    try {
+      await collections[key].deleteMany({});
+    } catch (error) {
+      console.error(`Error cleaning collection ${key}:`, error);
+    }
   }
 });
