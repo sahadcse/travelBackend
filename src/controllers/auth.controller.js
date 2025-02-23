@@ -1,229 +1,166 @@
-const AuthService = require("../services/auth.service");
+const {
+  register: registerService,
+  login: loginService,
+  forgotPassword: forgotPasswordService,
+  resetPassword: resetPasswordService,
+} = require("../services/auth.service");
 const logger = require("../utils/logger");
-const ResponseHandler = require("../utils/ResponseHandler");
 
-/**
- * Authentication Controller
- * Handles all authentication related operations including registration, login, logout,
- * and password management
- */
-class AuthController {
-  /**
-   * Initialize controller with auth service instance
-   */
-  constructor() {
-    this.authService = new AuthService();
-    // Bind methods to instance
-    this.login = this.login.bind(this);
-    this.register = this.register.bind(this);
-    this.logout = this.logout.bind(this);
-    this.forgotPassword = this.forgotPassword.bind(this);
-    this.resetPassword = this.resetPassword.bind(this);
+const register = async (req, res) => {
+  const {
+    email,
+    password,
+    firstName,
+    lastName,
+    phone,
+    address,
+    preferences,
+    role,
+  } = req.body || {};
+
+  if (!email || !password || !firstName || !lastName) {
+    return res.status(400).json({
+      success: false,
+      message: "Email, password, firstName and lastName are required",
+    });
   }
 
-  /**
-   * Register a new user
-   * @param {Request} req - Express request object containing user registration data
-   * @param {Response} res - Express response object
-   * @returns {Promise<void>} - JSON response with user data and token
-   */
-  async register(req, res) {
-    const {
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 6 characters long",
+    });
+  }
+
+  try {
+    const newUserData = {
       email,
       password,
       firstName,
       lastName,
       phone,
-      address,
-      preferences,
-      role,
-    } = req.body || {};
+      address: address || {},
+      preferences: preferences || {},
+      role: role || "customer",
+    };
 
-    // Validate required fields
-    if (!email || !password || !firstName || !lastName) {
-      return ResponseHandler.error(
-        res,
-        "Email, password, firstName and lastName are required",
-        400
-      );
-    }
+    const { token, user } = await registerService(newUserData);
+    logger.info(`${role} registered successfully: ${email}`);
 
-    // Validate password length
-    if (password.length < 6) {
-      return ResponseHandler.error(
-        res,
-        "Password must be at least 6 characters long",
-        400
-      );
-    }
+    return res.status(201).json({
+      success: true,
+      message: `${role} registered successfully`,
+      token,
+      user,
+    });
+  } catch (error) {
+    logger.error(`Registration failed: ${error.message}`);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Registration failed",
+    });
+  }
+};
 
-    try {
-      // Prepare user data with default values
-      const userData = {
-        email,
-        password,
-        firstName,
-        lastName,
-        phone,
-        address: address || {},
-        preferences: preferences || {},
-        role: role || "customer",
-      };
+const login = async (req, res) => {
+  const { email, password } = req.body || {};
 
-      // Attempt user registration
-      const result = await this.authService.register(userData);
-      logger.info(`${role} registered successfully: ${email}`);
-      ResponseHandler.success(res, {
-        message: `${role} registered successfully`,
-        token: result.token,
-        user: result.user,
-      });
-    } catch (err) {
-      logger.error(`Registration failed: ${err.message}`);
-      ResponseHandler.error(
-        res,
-        err.message || "Registration failed",
-        err.statusCode || 400
-      );
-    }
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and password are required",
+    });
   }
 
-  /**
-   * Authenticate user login
-   * @param {Request} req - Express request object containing login credentials
-   * @param {Response} res - Express response object
-   * @returns {Promise<void>} - JSON response with user data and token
-   */
-  async login(req, res) {
-    const { email, password } = req.body || {};
+  try {
+    const { token, user } = await loginService(email, password);
+    const authenticatedUser = {
+      ...user,
+      lastLogin: new Date(),
+    };
 
-    if (!email || !password) {
-      return ResponseHandler.error(res, "Email and password are required", 400);
-    }
+    logger.info(`${authenticatedUser?.role} logged in successfully: ${email}`);
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: authenticatedUser,
+    });
+  } catch (error) {
+    logger.error(`Login failed: ${error.message}`);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Login failed",
+    });
+  }
+};
 
-    try {
-      const result = await this.authService.login(email, password);
+const logout = async (req, res) => {
+  const userEmail = req.user?.email;
+  logger.info(`User logged out: ${userEmail}`);
+  res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
 
-      // Add last login time to response
-      const userData = {
-        ...result.user,
-        lastLogin: new Date(),
-      };
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
 
-      logger.info(`${userData?.role} logged in successfully: ${email}`);
-      ResponseHandler.success(res, {
-        message: "Login successful",
-        token: result.token,
-        user: userData,
-      });
-    } catch (err) {
-      logger.error(`Login failed: ${err.message}`);
-      ResponseHandler.error(
-        res,
-        err.message || "Login failed",
-        err.statusCode || 401
-      );
-    }
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "Email is required",
+    });
   }
 
-  /**
-   * Handle user logout
-   * @param {Request} req - Express request object
-   * @param {Response} res - Express response object
-   * @returns {Promise<void>} - Success message
-   */
-  async logout(req, res) {
-    // Since we're using JWT, we just need to let the client remove the token
-    logger.info(`User logged out: ${req.user?.email}`);
-    ResponseHandler.success(res, { message: "Logged out successfully" });
+  try {
+    await forgotPasswordService(email);
+    logger.info(`Password reset requested for: ${email}`);
+    return res.status(200).json({
+      success: true,
+      message: "Password reset instructions sent",
+    });
+  } catch (error) {
+    logger.error(`Password reset request failed: ${error.message}`);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Password reset failed",
+    });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!token || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Token and new password are required",
+    });
   }
 
-  /**
-   * Initiate password reset process
-   * @param {Request} req - Express request object containing user email
-   * @param {Response} res - Express response object
-   * @returns {Promise<void>} - JSON response with reset token
-   */
-  async forgotPassword(req, res) {
-    const { email } = req.body;
-
-    if (!email) {
-      return ResponseHandler.error(res, "Email is required", 400);
-    }
-
-    try {
-      // Check if user exists before attempting password reset
-      const result = await this.authService.forgotPassword(email);
-
-      if (!result.success) {
-        return ResponseHandler.error(res, "No user found with this email", 404);
-      }
-
-      logger.info(`Password reset requested for: ${email}`);
-      ResponseHandler.success(res, {
-        message: "Password reset instructions sent",
-        resetToken: result.resetToken,
-      });
-    } catch (err) {
-      logger.error(`Password reset request failed: ${err.message}`);
-      ResponseHandler.error(
-        res,
-        err.message || "Password reset failed",
-        err.statusCode || 400
-      );
-    }
+  try {
+    await resetPasswordService(token, password);
+    logger.info("Password reset successful");
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful",
+    });
+  } catch (error) {
+    logger.error(`Password reset failed: ${error.message}`);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Password reset failed",
+    });
   }
+};
 
-  /**
-   * Complete password reset process
-   * @param {Request} req - Express request object containing reset token and new password
-   * @param {Response} res - Express response object
-   * @returns {Promise<void>} - Success message
-   */
-  async resetPassword(req, res) {
-    const { token } = req.params;
-    const { password } = req.body;
-
-    if (!token || !password) {
-      return ResponseHandler.error(
-        res,
-        "Token and new password are required",
-        400
-      );
-    }
-
-    try {
-      await this.authService.resetPassword(token, password);
-      logger.info("Password reset successful");
-      ResponseHandler.success(res, { message: "Password reset successful" });
-    } catch (err) {
-      logger.error(`Password reset failed: ${err.message}`);
-      ResponseHandler.error(
-        res,
-        err.message || "Password reset failed",
-        err.statusCode || 400
-      );
-    }
-  }
-
-  /**
-   * Utility method to send error responses
-   * @param {Response} res - Express response object
-   * @param {string} message - Error message
-   * @param {number} statusCode - HTTP status code
-   */
-  sendError(res, message, statusCode = 500) {
-    if (!res.headersSent) {
-      res.writeHead(statusCode, { "Content-Type": "application/json" });
-      res.end(
-        JSON.stringify({
-          status: "error",
-          message,
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
-  }
-}
-
-module.exports = AuthController;
+module.exports = {
+  register,
+  login,
+  logout,
+  forgotPassword,
+  resetPassword,
+};

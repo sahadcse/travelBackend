@@ -1,26 +1,20 @@
-const Router = require("../router/router");
-const ServiceController = require("../controllers/service.controller");
-const { restrictTo, protect } = require("../middleware/auth.middleware");
-const { catchAsync } = require("../utils/catchAsync");
+const express = require("express");
+const router = express.Router();
+const {
+  createService,
+  getAllServices,
+  getServiceById,
+  updateService,
+  deleteService,
+  searchServices,
+} = require("../controllers/service.controller");
+const { restrictTo } = require("../middleware/auth.middleware");
 
-const router = new Router();
-const ctrl = new ServiceController();
-
-router.get("/search", protect, catchAsync(ctrl.searchServices));
-router.get("/", protect, catchAsync(ctrl.getAllServices));
-router.post(
-  "/everythinggreen",
-  protect,
-  restrictTo("provider", "admin"),
-  catchAsync(ctrl.createService)
-);
-router.get("/:id", protect, catchAsync(ctrl.getServiceById));
-router.patch(
-  "/:id",
-  protect,
-  restrictTo("provider", "admin"),
-  catchAsync(ctrl.updateService)
-);
-router.delete("/:id", restrictTo("admin"), catchAsync(ctrl.deleteService));
+router.get("/search", searchServices);
+router.get("/all", getAllServices);
+router.post("/create", restrictTo("provider", "admin"), createService);
+router.get("/single/:id", getServiceById);
+router.patch("/update/:id", restrictTo("provider", "admin"), updateService);
+router.delete("/delete/:id", restrictTo("admin"), deleteService);
 
 module.exports = router;

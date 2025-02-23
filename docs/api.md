@@ -14,54 +14,54 @@ All routes except `/auth/*` and the root endpoint require authentication via Bea
 
 | Method | Endpoint                      | Description               | Access |
 | ------ | ----------------------------- | ------------------------- | ------ |
-| POST   | `/auth/login`                 | User login                | Public |
 | POST   | `/auth/register`              | User registration         | Public |
+| POST   | `/auth/login`                 | User login                | Public |
 | POST   | `/auth/logout`                | User logout               | Public |
 | POST   | `/auth/forgot-password`       | Request password reset    | Public |
-| PATCH  | `/auth/reset-password/:token` | Reset password with token | Public |
+| POST   | `/auth/reset-password/:token` | Reset password with token | Public |
 
 ### User Routes
 
-| Method | Endpoint     | Description     | Access          |
-| ------ | ------------ | --------------- | --------------- |
-| GET    | `/users`     | Get all users   | Admin           |
-| GET    | `/users/:id` | Get user by ID  | Admin, Customer |
-| POST   | `/users`     | Create new user | Admin           |
-| PUT    | `/users/:id` | Update user     | Admin, Customer |
-| DELETE | `/users/:id` | Delete user     | Admin           |
+| Method | Endpoint            | Description    | Access                    |
+| ------ | ------------------- | -------------- | ------------------------- |
+| GET    | `/users/all`        | Get all users  | Admin                     |
+| GET    | `/users/single/:id` | Get user by ID | Admin, Customer, Provider |
+| POST   | `/users/create`     | Create user    | Admin                     |
+| PUT    | `/users/update/:id` | Update user    | Admin, Customer           |
+| DELETE | `/users/delete/:id` | Delete user    | Admin                     |
 
 ### Service Routes
 
-| Method | Endpoint           | Description       | Access          |
-| ------ | ------------------ | ----------------- | --------------- |
-| GET    | `/services/search` | Search services   | Protected       |
-| GET    | `/services`        | Get all services  | Protected       |
-| POST   | `/services`        | Create service    | Provider, Admin |
-| GET    | `/services/:id`    | Get service by ID | Protected       |
-| PATCH  | `/services/:id`    | Update service    | Provider, Admin |
-| DELETE | `/services/:id`    | Delete service    | Admin           |
+| Method | Endpoint               | Description       | Access          |
+| ------ | ---------------------- | ----------------- | --------------- |
+| GET    | `/services/search`     | Search services   | Protected       |
+| GET    | `/services/all`        | Get all services  | Protected       |
+| POST   | `/services/create`     | Create service    | Provider, Admin |
+| GET    | `/services/single/:id` | Get service by ID | Protected       |
+| PATCH  | `/services/update/:id` | Update service    | Provider, Admin |
+| DELETE | `/services/delete/:id` | Delete service    | Admin           |
 
 ### Transport Routes
 
-| Method | Endpoint             | Description         | Access          |
-| ------ | -------------------- | ------------------- | --------------- |
-| GET    | `/transports/search` | Search transports   | Protected       |
-| GET    | `/transports`        | Get all transports  | Protected       |
-| POST   | `/transports`        | Create transport    | Provider, Admin |
-| GET    | `/transports/:id`    | Get transport by ID | Protected       |
-| PATCH  | `/transports/:id`    | Update transport    | Provider, Admin |
-| DELETE | `/transports/:id`    | Delete transport    | Admin           |
+| Method | Endpoint                 | Description         | Access          |
+| ------ | ------------------------ | ------------------- | --------------- |
+| GET    | `/transports/search`     | Search transports   | Protected       |
+| GET    | `/transports/all`        | Get all transports  | Protected       |
+| POST   | `/transports/create`     | Create transport    | Provider, Admin |
+| GET    | `/transports/single/:id` | Get transport by ID | Protected       |
+| PATCH  | `/transports/update/:id` | Update transport    | Provider, Admin |
+| DELETE | `/transports/delete/:id` | Delete transport    | Admin           |
 
 ### Booking Routes
 
-| Method | Endpoint                | Description           | Access    |
-| ------ | ----------------------- | --------------------- | --------- |
-| GET    | `/bookings/my-bookings` | Get user's bookings   | Protected |
-| POST   | `/bookings`             | Create booking        | Protected |
-| PATCH  | `/bookings/:id/cancel`  | Cancel booking        | Protected |
-| GET    | `/bookings`             | Get all bookings      | Admin     |
-| PATCH  | `/bookings/:id/status`  | Update booking status | Admin     |
-| DELETE | `/bookings/:id`         | Delete booking        | Admin     |
+| Method | Endpoint                     | Description           | Access    |
+| ------ | ---------------------------- | --------------------- | --------- |
+| GET    | `/bookings/my-bookings`      | Get user's bookings   | Protected |
+| POST   | `/bookings/create`           | Create booking        | Protected |
+| PATCH  | `/bookings/cancel/:id`       | Cancel booking        | Protected |
+| GET    | `/bookings/all`              | Get all bookings      | Admin     |
+| PATCH  | `/bookings/updateStatus/:id` | Update booking status | Admin     |
+| DELETE | `/bookings/delete/:id`       | Delete booking        | Admin     |
 
 ## Request & Response Examples
 
@@ -121,6 +121,55 @@ POST /api/v1/bookings
       "checkIn": "2024-02-01",
       "checkOut": "2024-02-05",
       "guests": 2
+    }
+  }
+}
+```
+
+### User Profile Updates
+
+#### Update Password Request
+
+```json
+PATCH /api/v1/users/password
+{
+  "currentPassword": "oldpassword123",
+  "newPassword": "newpassword123",
+  "confirmPassword": "newpassword123"
+}
+```
+
+#### Update Password Response
+
+```json
+{
+  "success": true,
+  "message": "Password updated successfully"
+}
+```
+
+#### Update Profile Request
+
+```json
+PATCH /api/v1/users/profile
+{
+  "name": "Updated Name",
+  "email": "newemail@example.com",
+  "phone": "1234567890"
+}
+```
+
+#### Update Profile Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user-id",
+      "name": "Updated Name",
+      "email": "newemail@example.com",
+      "phone": "1234567890"
     }
   }
 }

@@ -1,65 +1,126 @@
-const ServiceService = require("../services/service.service");
-const AppError = require("../utils/AppError");
-const { success } = require("../utils/http");
+const {
+  createService: create,
+  getAllServices: getAll,
+  getServiceById: getById,
+  updateService: update,
+  deleteService: remove,
+  searchServices: search,
+} = require("../services/service.service");
 
-class ServiceController {
-  constructor() {
-    this.service = new ServiceService();
-
-    // Bind all methods
-    this.create = this.create.bind(this);
-    this.getAll = this.getAll.bind(this);
-    this.getOne = this.getOne.bind(this);
-    this.update = this.update.bind(this);
-    this.remove = this.remove.bind(this);
-    this.search = this.search.bind(this);
-  }
-
-  sendResponse(res, status, data) {
-    success(
-      res,
-      {
-        results: Array.isArray(data) ? data.length : undefined,
-        data,
-      },
-      status
-    );
-  }
-
-  async create(req, res) {
-    const service = await this.service.create({
+const createService = async (req, res) => {
+  try {
+    const service = await create({
       ...req.body,
       owner_id: req.user._id,
     });
-    this.sendResponse(res, 201, { service });
+    res.status(201).json({
+      success: true,
+      data: { service },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error creating service",
+    });
   }
+};
 
-  async getAll(req, res) {
-    const services = await this.service.getAll(req.query);
-    this.sendResponse(res, 200, { services });
+const getAllServices = async (req, res) => {
+  try {
+    const services = await getAll(req.query);
+    res.status(200).json({
+      success: true,
+      results: services.length,
+      data: { services },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error fetching services",
+    });
   }
+};
 
-  async getOne(req, res) {
-    const service = await this.service.getById(req.params.id);
-    if (!service) throw new AppError("Service not found", 404);
-    this.sendResponse(res, 200, { service });
+const getServiceById = async (req, res) => {
+  try {
+    const service = await getById(req.params.id);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { service },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error fetching service",
+    });
   }
+};
 
-  async update(req, res) {
-    const service = await this.service.update(req.params.id, req.body);
-    if (!service) throw new AppError("Service not found", 404);
-    this.sendResponse(res, 200, { service });
+const updateService = async (req, res) => {
+  try {
+    const service = await update(req.params.id, req.body);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { service },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error updating service",
+    });
   }
+};
 
-  async remove(req, res) {
-    await this.service.delete(req.params.id);
-    this.sendResponse(res, 204, null);
+const deleteService = async (req, res) => {
+  try {
+    await remove(req.params.id);
+    res.status(204).json({
+      success: true,
+      data: null,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error deleting service",
+    });
   }
+};
 
-  async search(req, res) {
-    const services = await this.service.search(req.query);
-    this.sendResponse(res, 200, { services });
+const searchServices = async (req, res) => {
+  try {
+    const services = await search(req.query);
+    res.status(200).json({
+      success: true,
+      results: services.length,
+      data: { services },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error searching services",
+    });
   }
-}
+};
 
-module.exports = ServiceController;
+module.exports = {
+  createService,
+  getAllServices,
+  getServiceById,
+  updateService,
+  deleteService,
+  searchServices,
+};

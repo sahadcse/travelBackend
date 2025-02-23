@@ -1,5 +1,4 @@
-const Router = require("../router/router");
-const ResponseHandler = require("../utils/ResponseHandler");
+const express = require("express");
 const { protect } = require("../middleware/auth.middleware");
 
 const userRoutes = require("./user.route");
@@ -8,21 +7,30 @@ const serviceRoutes = require("./service.route");
 const bookingRoutes = require("./booking.route");
 const transportRoutes = require("./transport.route");
 
-const router = new Router();
+const router = express.Router();
 
-// Define a simple base route
+// Base route
 router.get("/", (req, res) => {
-  ResponseHandler.success(res, { message: "Welcome to the API" });
+  res.status(200).json({
+    status: 200,
+    message: "Welcome to the Hotel Booking API",
+  });
 });
 
-// Middleware-like function to mount routers
-router.use("/api/v1/users", userRoutes);
+// Public routes
 router.use("/api/v1/auth", authRoutes);
-router.use("/api/v1/services", serviceRoutes);
-router.use("/api/v1/bookings", bookingRoutes);
-router.use("/api/v1/transports", transportRoutes);
 
-console.log("Routes registered in index.js"); // Debugging log
-router.logRoutes(); // Log all registered routes
+// Protected routes
+router.use("/api/v1/users", protect, userRoutes);
+router.use("/api/v1/services", protect, serviceRoutes);
+router.use("/api/v1/bookings", protect, bookingRoutes);
+router.use("/api/v1/transports", protect, transportRoutes);
 
-module.exports = router.route.bind(router);
+// not found route handler
+router.use((req, res, next) => {
+  const error = new Error("Resource not found");
+  error.status = 404;
+  next(error);
+});
+
+module.exports = router;

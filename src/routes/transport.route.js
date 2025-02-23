@@ -1,26 +1,20 @@
-const Router = require("../router/router");
-const TransportController = require("../controllers/transport.controller");
-const { restrictTo, protect } = require("../middleware/auth.middleware");
-const { catchAsync } = require("../utils/catchAsync");
+const express = require("express");
+const router = express.Router();
+const {
+  createTransport,
+  getAllTransports,
+  getTransportById,
+  updateTransport,
+  deleteTransport,
+  searchTransports,
+} = require("../controllers/transport.controller");
+const { restrictTo } = require("../middleware/auth.middleware");
 
-const router = new Router();
-const ctrl = new TransportController();
-
-router.get("/search", protect, catchAsync(ctrl.searchTransports));
-router.get("", protect, catchAsync(ctrl.getAllTransports));
-router.post(
-  "",
-  protect,
-  restrictTo(["provider", "admin"]),
-  catchAsync(ctrl.createTransport)
-);
-router.get("/:id", protect, catchAsync(ctrl.getTransportById));
-router.patch(
-  "/:id",
-  protect,
-  restrictTo(["provider", "admin"]),
-  catchAsync(ctrl.updateTransport)
-);
-router.delete("/:id", restrictTo("admin"), catchAsync(ctrl.deleteTransport));
+router.get("/search", searchTransports);
+router.get("/all", getAllTransports);
+router.post("/create", restrictTo("provider", "admin"), createTransport);
+router.get("/single/:id", getTransportById);
+router.patch("/update/:id", restrictTo("provider", "admin"), updateTransport);
+router.delete("/delete/:id", restrictTo("admin"), deleteTransport);
 
 module.exports = router;

@@ -1,20 +1,20 @@
-const Router = require("../router/router");
-const BookingController = require("../controllers/booking.controller");
-const { restrictTo, protect } = require("../middleware/auth.middleware");
-const { catchAsync } = require("../utils/catchAsync");
+const express = require("express");
+const router = express.Router();
+const {
+  create,
+  getMyBookings,
+  getAll,
+  cancelBooking,
+  updateStatus,
+  deleteBooking,
+} = require("../controllers/booking.controller");
+const { restrictTo } = require("../middleware/auth.middleware");
 
-const router = new Router();
-const ctrl = new BookingController();
-
-router.get("/my-bookings", protect, catchAsync(ctrl.getMyBookings));
-router.post("", protect, catchAsync(ctrl.createBooking));
-router.patch(":id/cancel", protect, catchAsync(ctrl.cancelBooking));
-router.get("", restrictTo("admin"), catchAsync(ctrl.getAllBookings));
-router.patch(
-  ":id/status",
-  restrictTo("admin"),
-  catchAsync(ctrl.updateBookingStatus)
-);
-router.delete(":id", restrictTo("admin"), catchAsync(ctrl.deleteBooking));
+router.get("/my-bookings", getMyBookings);
+router.post("/create", create);
+router.patch("/cancel/:id", cancelBooking);
+router.get("/all", restrictTo("admin"), getAll);
+router.patch("/updateStatus/:id", restrictTo("admin"), updateStatus);
+router.delete("/delete/:id", restrictTo("admin"), deleteBooking);
 
 module.exports = router;

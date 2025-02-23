@@ -1,26 +1,46 @@
-const app = require("./src/utils/app");
-require("dotenv").config();
+const express = require("express");
+const dotenv = require("dotenv");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
+const os = require("os");
 
-const router = require("./src/routes/index");
+const router = require("./src/routes");
 const connectDB = require("./src/config/DB");
-const { loggingMiddleware } = require("./src/middleware/index");
 
+dotenv.config();
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(helmet());
 app.use(compression());
-app.use(loggingMiddleware);
 
-app.route(router);
+// Routes
+app.use(router);
 
 const port = process.env.PORT || 3000;
+
+const getLocalIP = () => {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return "127.0.0.1";
+};
 
 connectDB()
   .then(() => {
     app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+      const localIP = getLocalIP();
+      console.clear();
+      console.log(`Server running on http://${localIP}:${port}`);
     });
   })
   .catch((error) => {

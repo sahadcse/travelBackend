@@ -1,52 +1,52 @@
 const User = require("../models/userModel");
 const PasswordUtil = require("../utils/passwordUtil");
 
-class UserService {
-  static async createUser(userData) {
-    const hashedPassword = await PasswordUtil.hash(userData.password);
-    userData.password = hashedPassword;
-    // userData.passwordConfirm = hashedPassword;
+const createUser = async (userData) => {
+  const hashedPassword = await PasswordUtil.hash(userData.password);
+  userData.password = hashedPassword;
 
-    const user = new User(userData);
-    await user.save();
+  const user = await User.create(userData);
+  user.password = undefined;
+  return user;
+};
 
-    // Remove sensitive data
-    user.password = undefined;
-    // user.passwordConfirm = undefined;
-    return user;
+const getUsers = async (query = {}) => {
+  return await User.find(query).select("-password");
+};
+
+const getUserById = async (id) => {
+  return await User.findById(id).select("-password");
+};
+
+const updateUser = async (id, updateData) => {
+  if (updateData.password) {
+    updateData.password = await PasswordUtil.hash(updateData.password);
   }
 
-  static async getUsers(query = {}) {
-    return User.find(query).select("-password");
-  }
+  return await User.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  }).select("-password");
+};
 
-  static async getUserById(id) {
-    return User.findById(id).select("-password");
-  }
+const deleteUser = async (id) => {
+  return await User.findByIdAndDelete(id);
+};
 
-  static async updateUser(id, updateData) {
-    if (updateData.password) {
-      updateData.password = await PasswordUtil.hashPassword(updateData.password);
-      // updateData.passwordConfirm = updateData.password;
-    }
+const findByEmail = async (email) => {
+  return await User.findOne({ email }).select("+password");
+};
 
-    return User.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    }).select("-password");
-  }
+const validatePassword = async (user, password) => {
+  return await PasswordUtil.verify(password, user.password);
+};
 
-  static async deleteUser(id) {
-    return User.findByIdAndDelete(id);
-  }
-
-  static async findByEmail(email) {
-    return User.findOne({ email }).select("+password");
-  }
-
-  static async validatePassword(user, password) {
-    return PasswordUtil.verify(password, user.password);
-  }
-}
-
-module.exports = UserService;
+module.exports = {
+  createUser,
+  getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  findByEmail,
+  validatePassword,
+};
